@@ -5,6 +5,7 @@
 
 所以随机出来的基本也都满意
 ![img.png](mdimg/img.png)
+![gif.gif](mdimg/gif.gif)
 
 ## 程序设计
 1. 使用Python设计程序, 需要写好详细中文注释

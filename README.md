@@ -38,6 +38,15 @@
 
 ### V1.3 更新移出图片/最爱图片
 
+版本描述: 
+v1.3.1
+- 将随机最爱配置文件改成相对路径, 增加兼容性
+
+[点击获取V1.3.1发行版](https://github.com/xianlin520/ImgRandomDisplay/releases/tag/V1.3.1)
+
+
+### V1.3 更新移出图片/最爱图片
+
 [点击获取V1.3发行版](https://github.com/xianlin520/ImgRandomDisplay/releases/tag/V1.3)
 
 [随机图片查看器.exe](https://www.yuque.com/attachments/yuque/0/2024/zip/28117057/1728894370670-01d79269-f612-463a-b0ac-290de9d9cf03.zip)

@@ -1,21 +1,16 @@
 # 导入必要的库
-import io
 import os
 import random
 import shutil
-import struct
 import tkinter as tk
 from tkinter import filedialog, messagebox, Menu
-
-import win32clipboard
-import win32con
 from PIL import Image, ImageTk
 import sys
 import subprocess
 import time
 import configparser
 import json
-import ctypes
+from tkinter import filedialog  # 如果需要用到
 
 
 
@@ -40,10 +35,6 @@ v1.3
 - 在右键菜单上添加"取消最爱"功能, 将文件从配置文件中移除
 v1.3.1
 - 将随机最爱配置文件改成相对路径, 增加兼容性
-v1.3.2
-- 修改程序ICO, 提升美观度
-- 右键可以将图片复制到粘贴板
-- 修复已知问题
 """
 
 # 定义主应用类
@@ -57,12 +48,9 @@ class RandomImageViewer:
         initial_width = 1200
         initial_height = 800
         self.root.geometry(f"{initial_width}x{initial_height}")  # 设置窗口大小为宽1200高800
-        # 设置程序ICO
-        self.root.iconbitmap("ChatZenLogo_64x64.ico")  # 设置程序ICO
-        # 设置运行程序ICO
 
         # 窗口化全屏（最大化窗口）
-        self.root.state('zoomed')  # 最大化窗口
+        self.set_maximized_window()
 
         # 设置全局字体为微软雅黑
         self.default_font = ("微软雅黑", 12)
@@ -77,7 +65,7 @@ class RandomImageViewer:
         self.favorites = []  # 收藏的图片路径列表
 
         # 读取配置文件
-        self.config_file = "config.ini"
+        self.config_file = "../config.ini"
         self.read_config()
 
         # 设置最爱配置文件
@@ -146,6 +134,16 @@ class RandomImageViewer:
         # 绑定按键事件，按下Esc键退出程序
         self.root.bind("<Escape>", self.exit_program)
 
+    def set_maximized_window(self):
+        """
+        设置窗口为最大化状态（窗口化全屏）
+        仅适配Windows系统
+        """
+        if os.name == 'nt':  # Windows
+            self.root.state('zoomed')  # 最大化窗口
+        else:
+            messagebox.showwarning("警告", "当前程序仅支持Windows系统。")
+            self.root.geometry("1200x800")  # 设置默认窗口大小
 
     def exit_program(self, event=None):
         """
@@ -564,7 +562,6 @@ class RandomImageViewer:
         """
         menu = Menu(self.root, tearoff=0)
         menu.add_command(label="另存为", command=lambda: self.save_as(path))
-        menu.add_command(label="复制图片", command=lambda: self.copy_image(path))
         menu.add_command(label="打开文件所在位置", command=lambda: self.open_file_location(path))
         menu.add_command(label="移出图片", command=lambda: self.remove_image(path))  # 新增“移出图片”选项
         # 添加空行
@@ -598,30 +595,6 @@ class RandomImageViewer:
             messagebox.showinfo("成功", f"图片已保存为 {filename}")
         except Exception as e:
             messagebox.showerror("错误", f"无法保存图片: {e}")
-
-    def copy_image(self, path):
-        """
-        将选中的图片路径复制到剪贴板
-        """
-        try:
-            if not path:
-                messagebox.showwarning("警告", "未选中任何图片。")
-                return
-            image = Image.open(path)
-
-            output = io.BytesIO()
-            image.convert("RGB").save(output, "BMP")
-            data = output.getvalue()[14:]  # BMP 文件头前14字节
-            output.close()
-
-            win32clipboard.OpenClipboard()
-            try:
-                win32clipboard.EmptyClipboard()
-                win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-            finally:
-                win32clipboard.CloseClipboard()
-        except Exception as e:
-            messagebox.showerror("错误", f"无法复制图片路径: {e}")
 
     def open_file_location(self, path):
         """
@@ -712,8 +685,7 @@ if __name__ == "__main__":
     if os.name != 'nt':
         messagebox.showerror("错误", "当前程序仅支持Windows系统。")
         sys.exit()
-    # 设置设置当前进程显式应用程序用户模型ID
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("RandomImageViewer")
+
     root = tk.Tk()
     app = RandomImageViewer(root)
     root.mainloop()

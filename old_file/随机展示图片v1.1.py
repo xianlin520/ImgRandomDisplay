@@ -9,10 +9,6 @@ import sys
 import subprocess
 import time
 import configparser
-import json
-from tkinter import filedialog  # 如果需要用到
-
-
 
 """
 版本描述:
@@ -25,9 +21,6 @@ v1.0
 v1.1
 6. 保存配置文件, 自动读取配置文件
 7. 默认使用配置的输入输出路径目录
-v1.2
-8. 在右键菜单上添加“打开文件所在位置”选项
-9. 在右键菜单上添加"移出图片"功能, 会将图片移动到"Remove"目录
 """
 
 # 定义主应用类
@@ -57,7 +50,7 @@ class RandomImageViewer:
         self.photo_images = []            # Tkinter显示的图片对象
 
         # 读取配置文件
-        self.config_file = "config.ini"
+        self.config_file = "../config.ini"
         self.read_config()
 
         # 创建顶部按钮框架
@@ -110,13 +103,19 @@ class RandomImageViewer:
     def set_maximized_window(self):
         """
         设置窗口为最大化状态（窗口化全屏）
-        仅适配Windows系统
+        支持Windows、macOS和Linux
         """
-        if os.name == 'nt':  # Windows
-            self.root.state('zoomed')  # 最大化窗口
+        if sys.platform.startswith('win'):
+            self.root.state('zoomed')  # Windows
+        elif sys.platform.startswith('darwin'):
+            # macOS没有直接的最大化方法，但可以通过稍微调整窗口大小来模拟
+            try:
+                self.root.attributes('-zoomed', True)
+            except:
+                pass  # 某些macOS版本可能不支持'-zoomed'属性
         else:
-            messagebox.showwarning("警告", "当前程序仅支持Windows系统。")
-            self.root.geometry("1200x800")  # 设置默认窗口大小
+            # 对于Linux，可以尝试使用 'zoomed' 状态
+            self.root.state('zoomed')
 
     def exit_program(self, event=None):
         """
@@ -413,24 +412,26 @@ class RandomImageViewer:
     def open_image(self, path):
         """
         打开指定路径的图片
-        仅适配Windows系统
+        支持Windows、macOS和Linux
         """
         try:
-            if os.name == 'nt':  # Windows
+            if sys.platform.startswith('darwin'):
+                subprocess.call(('open', path))
+            elif os.name == 'nt':  # Windows
                 os.startfile(path)
+            elif os.name == 'posix':  # Linux
+                subprocess.call(['xdg-open', path])
             else:
-                messagebox.showinfo("提示", "当前操作系统不支持此功能。")
+                messagebox.showinfo("提示", "无法在此操作系统上打开图片。")
         except Exception as e:
             messagebox.showerror("错误", f"无法打开图片: {e}")
 
     def show_context_menu(self, event, path):
         """
-        显示右键菜单，包含“另存为”和“打开文件所在位置”选项
+        显示右键菜单，包含“另存为”选项
         """
         menu = Menu(self.root, tearoff=0)
         menu.add_command(label="另存为", command=lambda: self.save_as(path))
-        menu.add_command(label="打开文件所在位置", command=lambda: self.open_file_location(path))
-        menu.add_command(label="移出图片", command=lambda: self.remove_image(path))  # 新增“移出图片”选项
         try:
             menu.tk_popup(event.x_root, event.y_root)
         finally:
@@ -457,57 +458,8 @@ class RandomImageViewer:
         except Exception as e:
             messagebox.showerror("错误", f"无法保存图片: {e}")
 
-    def open_file_location(self, path):
-        """
-        打开指定文件所在的文件夹，并选中该文件
-        仅适配Windows系统
-        """
-        try:
-            if os.name == 'nt':  # Windows
-                # 将 '/select,' 和路径合并为一个参数
-                explorer_argument = f'/select,{os.path.normpath(path)}'
-                subprocess.run(['explorer', explorer_argument])
-            else:
-                messagebox.showinfo("提示", "当前操作系统不支持此功能。")
-        except Exception as e:
-            messagebox.showerror("错误1", f"无法打开文件所在位置: {e}")
-
-    def remove_image(self, path):
-        """
-        将选中的图片移出到 Remove 子目录下，如果不存在则创建
-        """
-        try:
-            # 定义 Remove 子目录路径
-            remove_dir = os.path.join(self.image_dir, "Remove")
-
-            # 如果 Remove 子目录不存在，则创建
-            if not os.path.exists(remove_dir):
-                os.makedirs(remove_dir)
-
-            # 目标路径
-            destination = os.path.join(remove_dir, os.path.basename(path))
-
-            # 移动文件到 Remove 子目录
-            shutil.move(path, destination)
-
-            # 提示用户
-            messagebox.showinfo("成功", f"图片已移出到 {remove_dir}")
-
-            # 重新加载图片列表
-            self.load_images()
-
-            # 重新显示随机图片
-            self.display_random_images()
-        except Exception as e:
-            messagebox.showerror("错误", f"无法移出图片: {e}")
-
-
 # 主程序运行
 if __name__ == "__main__":
-    if os.name != 'nt':
-        messagebox.showerror("错误", "当前程序仅支持Windows系统。")
-        sys.exit()
-
     root = tk.Tk()
     app = RandomImageViewer(root)
     root.mainloop()

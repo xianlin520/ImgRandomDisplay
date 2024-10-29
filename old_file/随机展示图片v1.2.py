@@ -28,11 +28,6 @@ v1.1
 v1.2
 8. 在右键菜单上添加“打开文件所在位置”选项
 9. 在右键菜单上添加"移出图片"功能, 会将图片移动到"Remove"目录
-v1.3
-10. 在右键菜单上添加"设为最爱"功能, 将文件保存到配置文件中
-        配置文件在目标文件夹根目录下, 不使用默认配置文件, 避免冲突
-11. 添加随机最爱功能, 随机显示配置文件中的图片
-12. 在右键菜单上添加"取消最爱"功能, 将文件从配置文件中移除
 """
 
 # 定义主应用类
@@ -60,34 +55,14 @@ class RandomImageViewer:
         self.total_size = 0               # 总大小（字节）
         self.image_size_mb = {}           # 每张图片的大小（MB）
         self.photo_images = []            # Tkinter显示的图片对象
-        self.favorites = []  # 收藏的图片路径列表
 
         # 读取配置文件
-        self.config_file = "config.ini"
+        self.config_file = "../config.ini"
         self.read_config()
-
-        # 设置最爱配置文件
-        self.favorite_config_file = "favorites.ini"
-        # self.read_favorite_config()
 
         # 创建顶部按钮框架
         self.top_frame = tk.Frame(self.root, bg='black')
         self.top_frame.pack(pady=10)
-
-        # 创建“随机最爱”按钮
-        self.random_favorite_button = tk.Button(
-            self.top_frame,
-            text="随机最爱",
-            command=self.display_random_favorite_image,
-            font=self.default_font,
-            bg="#333333",  # 按钮背景颜色
-            fg="white",  # 按钮文字颜色
-            activebackground="#555555",  # 按钮按下时的背景颜色
-            activeforeground="white",  # 按钮按下时的文字颜色
-            width=15,
-            height=2
-        )
-        self.random_favorite_button.pack(side=tk.LEFT, padx=10)
 
         # 创建“随机显示图片”按钮
         self.random_button = tk.Button(
@@ -149,94 +124,6 @@ class RandomImageViewer:
         """
         self.root.quit()
 
-    def display_random_favorite_image(self):
-        """
-        随机显示收藏列表中的一张或多张图片，排列为4列2行
-        """
-        try:
-            if not self.favorites:
-                messagebox.showinfo("提示", "收藏列表为空，请先设定一些最爱图片。")
-                return
-
-            # 清空之前的图片
-            for widget in self.images_frame.winfo_children():
-                widget.destroy()
-            self.photo_images.clear()
-
-            # 确定本次要展示的图片数
-            num_images_to_display = min(8, len(self.favorites))
-
-            # 随机选择收藏的图片
-            selected = random.sample(self.favorites, num_images_to_display)
-
-            # 设置网格布局参数
-            columns = 4  # 每行4列
-            rows = 2  # 共2行
-
-            for index, file in enumerate(selected):
-                try:
-                    # 打开图片并调整大小
-                    img = Image.open(file)
-                    max_size = (250, 250)  # 设置图片最大尺寸
-                    if hasattr(Image, 'Resampling'):
-                        resample_mode = Image.Resampling.LANCZOS
-                    else:
-                        resample_mode = Image.ANTIALIAS  # 兼容旧版本
-                    img.thumbnail(max_size, resample=resample_mode)
-                    photo = ImageTk.PhotoImage(img)
-                    self.photo_images.append(photo)  # 保持引用，防止图片被垃圾回收
-
-                    # 计算行列
-                    row = index // columns
-                    column = index % columns
-
-                    # 创建图片和大小标签的容器
-                    container = tk.Frame(self.images_frame, bg="black")
-                    container.grid(row=row, column=column, padx=20, pady=20)
-
-                    # 创建图片标签
-                    img_label = tk.Label(container, image=photo, bg="black", cursor="hand2")
-                    img_label.pack()
-
-                    # 显示图片大小
-                    size_mb = round(os.path.getsize(file) / (1024 * 1024), 2)
-                    size_label = tk.Label(
-                        container,
-                        text=f"{size_mb} MB",
-                        fg="white",
-                        bg="black",
-                        font=("微软雅黑", 10)
-                    )
-                    size_label.pack(pady=5)
-
-                    # 绑定左键点击事件打开图片
-                    img_label.bind("<Button-1>", lambda e, path=file: self.open_image(path))
-
-                    # 绑定右键点击事件显示菜单
-                    img_label.bind("<Button-3>", lambda e, path=file: self.show_context_menu(e, path))
-
-                except Exception as e:
-                    print(f"无法打开图片 {file}: {e}")
-
-        except Exception as e:
-            messagebox.showerror("错误", f"无法显示随机收藏图片: {e}")
-
-    def read_favorite_config(self):
-        """
-        读取配置文件，如果存在，则加载默认读取目录和保存目录
-        """
-        self.favorite_config = configparser.ConfigParser()
-        if os.path.exists(self.favorite_config_file):
-            # 加载收藏列表
-            self.favorite_config.read(self.favorite_config_file, encoding='utf-8')
-            favorites_str = self.favorite_config.get('Settings', 'favorites', fallback='')
-            if favorites_str:
-                self.favorites = json.loads(favorites_str)
-            else:
-                self.favorites = []
-        else:
-            self.favorites = []
-
     def read_config(self):
         """
         读取配置文件，如果存在，则加载默认读取目录和保存目录
@@ -250,23 +137,13 @@ class RandomImageViewer:
             self.default_read_dir = ''
             self.default_save_dir = ''
 
-    def write_favorite_config(self):
-        """
-        将配置写入配置文件
-        """
-        self.favorite_config['Settings'] = {
-            'favorites': json.dumps(self.favorites)
-        }
-        with open(self.favorite_config_file, 'w', encoding='utf-8') as f:
-            self.favorite_config.write(f)
-
     def write_config(self):
         """
         将配置写入配置文件
         """
         self.config['Settings'] = {
             'read_dir': self.default_read_dir,
-            'save_dir': self.default_save_dir,
+            'save_dir': self.default_save_dir
         }
         with open(self.config_file, 'w', encoding='utf-8') as configfile:
             self.config.write(configfile)
@@ -425,12 +302,6 @@ class RandomImageViewer:
                 self.root.quit()
                 return
 
-        # 设置配置文件路径为图片目录的根目录下
-        self.favorite_config_file = os.path.join(self.image_dir, "favorites.ini")
-
-        # 读取配置文件
-        self.read_favorite_config()
-
         # 清空之前的图片列表
         self.all_image_files.clear()
 
@@ -463,7 +334,7 @@ class RandomImageViewer:
         # 更新窗口标题
         total_size_gb = round(self.total_size / (1024 ** 3), 2)  # 转换为GB
         file_count = len(self.all_image_files)
-        self.root.title(f"随机图片查看器 - 已读取 {file_count} 张 - {total_size_gb} GB -- By 羡林i")
+        self.root.title(f"随机图片查看器 - 已读取 {file_count} 张 - {total_size_gb} GB")
 
     def display_random_images(self):
         """
@@ -560,12 +431,6 @@ class RandomImageViewer:
         menu.add_command(label="另存为", command=lambda: self.save_as(path))
         menu.add_command(label="打开文件所在位置", command=lambda: self.open_file_location(path))
         menu.add_command(label="移出图片", command=lambda: self.remove_image(path))  # 新增“移出图片”选项
-        # 添加空行
-        menu.add_separator()
-        if path in self.favorites:
-            menu.add_command(label="取消最爱", command=lambda: self.cancel_favorite(path))
-        else:
-            menu.add_command(label="设为最爱", command=lambda: self.set_as_favorite(path))
         try:
             menu.tk_popup(event.x_root, event.y_root)
         finally:
@@ -611,13 +476,6 @@ class RandomImageViewer:
         """
         将选中的图片移出到 Remove 子目录下，如果不存在则创建
         """
-        # 添加确认按钮
-        if not messagebox.askokcancel("移出图片", "确定要移出图片吗？"):
-            return
-
-        # 判断是否在最爱中
-        if path in self.favorites:
-            self.cancel_favorite(path)
         try:
             # 定义 Remove 子目录路径
             remove_dir = os.path.join(self.image_dir, "Remove")
@@ -642,34 +500,6 @@ class RandomImageViewer:
             self.display_random_images()
         except Exception as e:
             messagebox.showerror("错误", f"无法移出图片: {e}")
-
-    def set_as_favorite(self, path):
-        """
-        将选中的图片添加到收藏列表
-        """
-        try:
-            if path in self.favorites:
-                messagebox.showinfo("提示", "该图片已在收藏列表中。")
-                return
-            self.favorites.append(path)
-            self.write_favorite_config()
-            messagebox.showinfo("成功", "图片已添加到收藏列表。")
-        except Exception as e:
-            messagebox.showerror("错误", f"无法将图片设为最爱: {e}")
-
-    def cancel_favorite(self, path):
-        """
-        将选中的图片从收藏列表中移除
-        """
-        try:
-            if path not in self.favorites:
-                messagebox.showinfo("提示", "该图片不在收藏列表中。")
-                return
-            self.favorites.remove(path)
-            self.write_favorite_config()
-            messagebox.showinfo("成功", "图片已从收藏列表中移除。")
-        except Exception as e:
-            messagebox.showerror("错误", f"无法取消最爱: {e}")
 
 
 # 主程序运行

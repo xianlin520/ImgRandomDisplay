@@ -1,40 +1,29 @@
 # 导入必要的库
+import io
 import os
 import random
 import shutil
+import struct
 import tkinter as tk
 from tkinter import filedialog, messagebox, Menu
+
+import win32clipboard
+import win32con
 from PIL import Image, ImageTk
 import sys
 import subprocess
 import time
 import configparser
 import json
-from tkinter import filedialog  # 如果需要用到
+import ctypes
 
 
 
 """
 版本描述:
-v1.0
-- 窗口化全屏（最大化窗口）
-- 选择图片目录
-- 随机显示图片
-- 显示图片的大小
-- 保存到指定目录
-v1.1
-- 保存配置文件, 自动读取配置文件
-- 默认使用配置的输入输出路径目录
-v1.2
-- 在右键菜单上添加“打开文件所在位置”选项
-- 在右键菜单上添加"移出图片"功能, 会将图片移动到"Remove"目录
-v1.3
-- 在右键菜单上添加"设为最爱"功能, 将文件保存到配置文件中
--     配置文件在目标文件夹根目录下, 不使用默认配置文件, 避免冲突
-- 添加随机最爱功能, 随机显示配置文件中的图片
-- 在右键菜单上添加"取消最爱"功能, 将文件从配置文件中移除
-v1.3.1
-- 将随机最爱配置文件改成相对路径, 增加兼容性
+v1.4.0
+- 添加图片顺序查看功能, 与随机查看同级
+- 添加图片排序功能, 按时间, 大小等排序
 """
 
 # 定义主应用类
@@ -48,9 +37,12 @@ class RandomImageViewer:
         initial_width = 1200
         initial_height = 800
         self.root.geometry(f"{initial_width}x{initial_height}")  # 设置窗口大小为宽1200高800
+        # 设置程序ICO
+        self.root.iconbitmap("ChatZenLogo_64x64.ico")  # 设置程序ICO
+        # 设置运行程序ICO
 
         # 窗口化全屏（最大化窗口）
-        self.set_maximized_window()
+        self.root.state('zoomed')  # 最大化窗口
 
         # 设置全局字体为微软雅黑
         self.default_font = ("微软雅黑", 12)
@@ -65,7 +57,7 @@ class RandomImageViewer:
         self.favorites = []  # 收藏的图片路径列表
 
         # 读取配置文件
-        self.config_file = "config.ini"
+        self.config_file = "../config.ini"
         self.read_config()
 
         # 设置最爱配置文件
@@ -79,7 +71,7 @@ class RandomImageViewer:
         # 创建“随机最爱”按钮
         self.random_favorite_button = tk.Button(
             self.top_frame,
-            text="随机最爱",
+            text="查看最爱图片",
             command=self.display_random_favorite_image,
             font=self.default_font,
             bg="#333333",  # 按钮背景颜色
@@ -91,10 +83,32 @@ class RandomImageViewer:
         )
         self.random_favorite_button.pack(side=tk.LEFT, padx=10)
 
+        # 添加选择框
+        options = ["随机展示", "按时间排序", "按大小排序"]
+        self.display_option_var = tk.StringVar(value=options[0])  # 初始值设置为"随机展示"
+        self.display_option_menu = tk.OptionMenu(
+            self.top_frame,
+            self.display_option_var,
+            *options,
+            command=self.update_display_option,
+        )
+        self.display_option_menu.config(
+            # 移出白边
+            indicatoron=False,
+            font=self.default_font,
+            bg="#135D8E",
+            fg="white",
+            activebackground="#555555",
+            activeforeground="white",
+            width=15,
+            height=1
+        )
+        self.display_option_menu.pack(side=tk.LEFT, padx=10)
+
         # 创建“随机显示图片”按钮
         self.random_button = tk.Button(
             self.top_frame,
-            text="随机显示图片",
+            text="查看全部图片",
             command=self.display_random_images,
             font=self.default_font,
             bg="#333333",    # 按钮背景颜色
@@ -134,22 +148,23 @@ class RandomImageViewer:
         # 绑定按键事件，按下Esc键退出程序
         self.root.bind("<Escape>", self.exit_program)
 
-    def set_maximized_window(self):
-        """
-        设置窗口为最大化状态（窗口化全屏）
-        仅适配Windows系统
-        """
-        if os.name == 'nt':  # Windows
-            self.root.state('zoomed')  # 最大化窗口
-        else:
-            messagebox.showwarning("警告", "当前程序仅支持Windows系统。")
-            self.root.geometry("1200x800")  # 设置默认窗口大小
 
     def exit_program(self, event=None):
         """
         退出程序
         """
         self.root.quit()
+
+    def update_display_option(self, value):
+        """
+        更新展示图片的选项并重新显示图片
+        """
+        if value == "随机展示":
+            self.display_random_images()
+        elif value == "按时间排序":
+            self.display_images_sorted_by_time()
+        elif value == "按大小排序":
+            self.display_images_sorted_by_size()
 
     def display_random_favorite_image(self):
         """
@@ -543,6 +558,92 @@ class RandomImageViewer:
             except Exception as e:
                 print(f"无法打开图片 {file}: {e}")
 
+    def display_images_sorted_by_time(self):
+        """
+        按时间排序展示图片
+        """
+        sorted_images = sorted(self.all_image_files, key=lambda f: os.path.getmtime(os.path.join(self.image_dir, f)))
+        self.display_images(sorted_images)
+
+    def display_images_sorted_by_size(self):
+        """
+        按大小排序展示图片
+        """
+        sorted_images = sorted(self.all_image_files, key=lambda f: os.path.getsize(os.path.join(self.image_dir, f)))
+        self.display_images(sorted_images)
+
+    def display_images(self, image_list):
+        """
+        根据提供的图片列表展示图片
+        """
+        # 检查是否还有剩余的图片可以展示
+        if not self.remaining_images:
+            messagebox.showinfo("提示", "所有图片都已展示完毕，即将重置展示列表。")
+            self.remaining_images = image_list.copy()
+
+        # 确定本次展示的图片数
+        num_images_to_display = min(8, len(self.remaining_images))
+        # 选择未展示的图片前八张
+        selected = image_list[:num_images_to_display]
+
+        # 从剩余图片列表中移除已选择的图片
+        for file in selected:
+            self.remaining_images.remove(file)
+
+        # 清空之前的图片
+        for widget in self.images_frame.winfo_children():
+            widget.destroy()
+        self.photo_images.clear()
+
+        # 设置网格布局参数
+        columns = 4  # 每行4列
+        rows = 2     # 共2行
+
+        for index, file in enumerate(selected):
+            file_path = os.path.join(self.image_dir, file)
+            try:
+                # 打开图片并调整大小
+                img = Image.open(file_path)
+                max_size = (250, 250)  # 设置图片最大尺寸
+                if hasattr(Image, 'Resampling'):
+                    resample_mode = Image.Resampling.LANCZOS
+                else:
+                    resample_mode = Image.ANTIALIAS  # 兼容旧版本
+                img.thumbnail(max_size, resample=resample_mode)
+                photo = ImageTk.PhotoImage(img)
+                self.photo_images.append(photo)  # 保持引用，防止图片被垃圾回收
+
+                # 计算行列
+                row = index // columns
+                column = index % columns
+
+                # 创建图片和大小标签的容器
+                container = tk.Frame(self.images_frame, bg="black")
+                container.grid(row=row, column=column, padx=20, pady=20)
+
+                # 创建图片标签
+                img_label = tk.Label(container, image=photo, bg="black", cursor="hand2")
+                img_label.pack()
+
+                # 显示图片大小
+                size_label = tk.Label(
+                    container,
+                    text=f"{self.image_size_mb[file]} MB",
+                    fg="white",
+                    bg="black",
+                    font=("微软雅黑", 10)
+                )
+                size_label.pack(pady=5)
+
+                # 绑定左键点击事件打开图片
+                img_label.bind("<Button-1>", lambda e, path=file_path: self.open_image(path))
+
+                # 绑定右键点击事件显示菜单
+                img_label.bind("<Button-3>", lambda e, path=file_path: self.show_context_menu(e, path))
+
+            except Exception as e:
+                print(f"无法打开图片 {file}: {e}")
+
     def open_image(self, path):
         """
         打开指定路径的图片
@@ -562,6 +663,7 @@ class RandomImageViewer:
         """
         menu = Menu(self.root, tearoff=0)
         menu.add_command(label="另存为", command=lambda: self.save_as(path))
+        menu.add_command(label="复制图片", command=lambda: self.copy_image(path))
         menu.add_command(label="打开文件所在位置", command=lambda: self.open_file_location(path))
         menu.add_command(label="移出图片", command=lambda: self.remove_image(path))  # 新增“移出图片”选项
         # 添加空行
@@ -595,6 +697,30 @@ class RandomImageViewer:
             messagebox.showinfo("成功", f"图片已保存为 {filename}")
         except Exception as e:
             messagebox.showerror("错误", f"无法保存图片: {e}")
+
+    def copy_image(self, path):
+        """
+        将选中的图片路径复制到剪贴板
+        """
+        try:
+            if not path:
+                messagebox.showwarning("警告", "未选中任何图片。")
+                return
+            image = Image.open(path)
+
+            output = io.BytesIO()
+            image.convert("RGB").save(output, "BMP")
+            data = output.getvalue()[14:]  # BMP 文件头前14字节
+            output.close()
+
+            win32clipboard.OpenClipboard()
+            try:
+                win32clipboard.EmptyClipboard()
+                win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
+            finally:
+                win32clipboard.CloseClipboard()
+        except Exception as e:
+            messagebox.showerror("错误", f"无法复制图片路径: {e}")
 
     def open_file_location(self, path):
         """
@@ -685,7 +811,8 @@ if __name__ == "__main__":
     if os.name != 'nt':
         messagebox.showerror("错误", "当前程序仅支持Windows系统。")
         sys.exit()
-
+    # 设置设置当前进程显式应用程序用户模型ID
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("RandomImageViewer")
     root = tk.Tk()
     app = RandomImageViewer(root)
     root.mainloop()

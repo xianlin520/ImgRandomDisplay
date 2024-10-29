@@ -62,6 +62,7 @@ class RandomImageViewer:
         self.images_frame = tk.Frame(self.root, bg="black")
         self.images_frame.pack(expand=True)
 
+
         # 选择图片目录并读取文件
         self.select_directory()
 

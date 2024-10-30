@@ -109,8 +109,6 @@ class SettingsController:
         )
         reset_button.pack(side=tk.LEFT, padx=10)
 
-
-
     def read_config(self):
         """
         读取配置文件，如果存在，则加载默认读取目录和保存目录
@@ -133,6 +131,7 @@ class SettingsController:
                 # 关闭程序
                 sys.exit(0)
             return
+
     def write_config(self):
         """
         将配置写入配置文件

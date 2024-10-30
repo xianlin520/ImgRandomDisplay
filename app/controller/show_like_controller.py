@@ -1,16 +1,13 @@
-import configparser
-import json
 import os
 import random
 import threading
 import time
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import messagebox
 
 from PIL import Image, ImageTk
 
 from app.controller import menu_controller
-from app.controller.settings_controller import SettingsController
 from app.init_var import InitVar
 
 
@@ -124,6 +121,7 @@ class ShowLikeController:
 
         # 新建线程, 延迟执行
         threading.Timer(0.1, open_btn).start()
+
     def show_context_menu(self, event, path):
         """
         显示右键菜单，包含“另存为”和“打开文件所在位置”选项
@@ -143,6 +141,7 @@ class ShowLikeController:
             menu.tk_popup(event.x_root, event.y_root)
         finally:
             menu.grab_release()
+
     def count_img_list(self):
         # 确定本次要展示的图片数
         num_images_to_display = min(8, len(self.remaining_images))

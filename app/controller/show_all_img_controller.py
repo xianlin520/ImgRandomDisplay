@@ -4,7 +4,7 @@ import random
 import threading
 import time
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import messagebox
 
 from PIL import Image, ImageTk
 
@@ -18,17 +18,16 @@ class ShowAllImgController:
         self.root = view.root
 
         # 初始化变量
-        self.options = InitVar.options # 配置文件中的选项
+        self.options = InitVar.options  # 配置文件中的选项
         self.all_image_files = []  # 所有图片文件列表
         self.remaining_images = []  # 剩余未展示的图片列表
-        self.show_list = [] # 自适应适配完成后的图片列表
+        self.show_list = []  # 自适应适配完成后的图片列表
         self.photo_images = []  # Tkinter显示的图片对象
         self.total_size = 0  # 总大小（字节）
         self.image_size_mb = {}  # 每张图片的大小（MB）
 
         # 设置图片目录到成员变量
         self.image_dir = InitVar.image_dir
-
 
     def display_images(self):
         """
@@ -89,7 +88,6 @@ class ShowAllImgController:
                 img_label = tk.Label(container, image=photo, bg="black", cursor="hand2")
                 img_label.pack()
 
-
                 # 显示图片大小
                 size_label = tk.Label(
                     container,
@@ -121,6 +119,7 @@ class ShowAllImgController:
         # 完成后启用按钮
         def open_btn():
             self.view.button.config(state=tk.NORMAL)
+
         # 新建线程, 延迟执行
         threading.Timer(0.1, open_btn).start()
 
@@ -174,13 +173,13 @@ class ShowAllImgController:
         raty_sort_list.sort(key=lambda x: x[1], reverse=True)
 
         # print(raty_sort_list)
-        index_list = [(0,1),(1,1),(0,3),(1,3),(0,2),(1,2),(0,4),(1,4)]
+        index_list = [(0, 1), (1, 1), (0, 3), (1, 3), (0, 2), (1, 2), (0, 4), (1, 4)]
         self.show_list = []
         matrix_list = []
         no1 = 0
         no2 = 0
         for index in range(len(raty_sort_list)):
-            matrix_list.append([raty_sort_list[index][0],index_list[index], raty_sort_list[index][1]])
+            matrix_list.append([raty_sort_list[index][0], index_list[index], raty_sort_list[index][1]])
 
         # 判断每行比值总和是否超过上限, 超过则跳过
         for i in matrix_list:
@@ -230,24 +229,22 @@ class ShowAllImgController:
             size_mb = round(size / (1024 * 1024), 2)
             self.image_size_mb[file] = size_mb
 
-
         # 根据选项排序所有图片
         self.options = InitVar.options
-        if self.options == InitVar.OPTIONS_LIST[0]: # 随机排序
+        if self.options == InitVar.OPTIONS_LIST[0]:  # 随机排序
             random.shuffle(self.all_image_files)
-        elif self.options == InitVar.OPTIONS_LIST[1]: # 新 -> 旧
+        elif self.options == InitVar.OPTIONS_LIST[1]:  # 新 -> 旧
             # 读取所有图片的时间, 新的在前
             self.all_image_files.sort(key=lambda x: os.path.getmtime(os.path.join(self.image_dir, x)), reverse=True)
-        elif self.options == InitVar.OPTIONS_LIST[2]: # 旧 -> 新
+        elif self.options == InitVar.OPTIONS_LIST[2]:  # 旧 -> 新
             # 读取所有图片的时间, 旧的在前
             self.all_image_files.sort(key=lambda x: os.path.getmtime(os.path.join(self.image_dir, x)))
-        elif self.options == InitVar.OPTIONS_LIST[3]: # 大 -> 小
+        elif self.options == InitVar.OPTIONS_LIST[3]:  # 大 -> 小
             # 读取所有图片的大小, 大的在前
             self.all_image_files.sort(key=lambda x: self.image_size_mb[x])
         elif self.options == InitVar.OPTIONS_LIST[4]:  # 小 -> 大
             # 读取所有图片的大小, 小的在前
             self.all_image_files.sort(key=lambda x: self.image_size_mb[x], reverse=True)
-
 
         # 初始化剩余图片列表为所有图片
         self.remaining_images = self.all_image_files.copy()

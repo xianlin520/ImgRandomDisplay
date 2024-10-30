@@ -56,5 +56,3 @@ class AppView:
         OptionsView(self)
         # 查看全部图片
         ShowAllImgView(self)
-
-

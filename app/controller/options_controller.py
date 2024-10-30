@@ -9,4 +9,3 @@ class OptionsController:
     def update_display_option(self, value):
         """更新数值并执行所有回调函数"""
         InitVar.options = value
-

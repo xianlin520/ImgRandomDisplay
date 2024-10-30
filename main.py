@@ -1,23 +1,10 @@
 # 导入必要的库
-import io
-import os
-import random
-import shutil
-import struct
-import tkinter as tk
-from tkinter import filedialog, messagebox, Menu
-
-import win32clipboard
-import win32con
-from PIL import Image, ImageTk
-import sys
-import subprocess
-import time
-import configparser
-import json
 import ctypes
+import os
+import sys
+import tkinter as tk
+from tkinter import messagebox
 
-from app.controller.app_controller import AppController
 from app.view.app_view import AppView
 
 if __name__ == "__main__":

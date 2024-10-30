@@ -6,7 +6,7 @@ import os
 import shutil
 import subprocess
 import time
-from tkinter import filedialog, messagebox, Menu
+from tkinter import filedialog, messagebox
 
 import win32clipboard
 from PIL import Image
@@ -26,6 +26,8 @@ def open_image(path):
             messagebox.showinfo("提示", "当前操作系统不支持此功能。")
     except Exception as e:
         messagebox.showerror("错误", f"无法打开图片: {e}")
+
+
 def save_as(path):
     """
     将选定的图片另存为到指定目录，默认文件名为 '另存图片-HHMMSS'
@@ -46,6 +48,7 @@ def save_as(path):
         messagebox.showinfo("成功", f"图片已保存为 {filename}")
     except Exception as e:
         messagebox.showerror("错误", f"无法保存图片: {e}")
+
 
 def copy_image(path):
     """
@@ -71,6 +74,7 @@ def copy_image(path):
     except Exception as e:
         messagebox.showerror("错误", f"无法复制图片路径: {e}")
 
+
 def open_file_location(path):
     """
     打开指定文件所在的文件夹，并选中该文件
@@ -85,6 +89,7 @@ def open_file_location(path):
             messagebox.showinfo("提示", "当前操作系统不支持此功能。")
     except Exception as e:
         messagebox.showerror("错误1", f"无法打开文件所在位置: {e}")
+
 
 def remove_image(path):
     """
@@ -117,6 +122,7 @@ def remove_image(path):
     except Exception as e:
         messagebox.showerror("错误", f"无法移出图片: {e}")
 
+
 def set_as_favorite(path):
     """
     将选中的图片添加到收藏列表
@@ -132,6 +138,7 @@ def set_as_favorite(path):
         messagebox.showinfo("成功", "图片已添加到收藏列表。")
     except Exception as e:
         messagebox.showerror("错误", f"无法将图片设为最爱: {e}")
+
 
 def cancel_favorite(path):
     """
@@ -149,7 +156,10 @@ def cancel_favorite(path):
     except Exception as e:
         messagebox.showerror("错误", f"无法取消最爱: {e}")
 
+
 favorite_config = configparser.ConfigParser()
+
+
 def write_favorite_config():
     """
     将配置写入配置文件

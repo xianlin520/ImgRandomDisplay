@@ -1,4 +1,5 @@
 # 导入必要的库
+import base64
 import ctypes
 import os
 import sys
@@ -18,7 +19,16 @@ if __name__ == "__main__":
     # 初始窗口标题
     root.title(InitVar.WINDOW_TITLE)
     # 设置程序ICO
-    root.iconbitmap("ChatZenLogo_64x64.ico")  # 设置程序ICO
+    # 读取Base64转成ICO文件
+    # 解码 Base64 数据
+    icon_bytes = base64.b64decode(InitVar.ICO_)
+    # 保存为临时 ICO 文件
+    temp_icon_path = "temp_icon.ico"
+    with open(temp_icon_path, "wb") as icon_file:
+        icon_file.write(icon_bytes)
+    root.iconbitmap(temp_icon_path)  # 设置程序ICO
+    # 删除临时 ICO 文件
+    os.remove(temp_icon_path)
     # 设置全局字体为微软雅黑
     default_font = ("微软雅黑", 12)
     root.option_add("*Font", default_font)

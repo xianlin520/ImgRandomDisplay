@@ -121,9 +121,8 @@ class SettingsController:
         else:
             self.default_read_dir = ''
             self.default_save_dir = ''
-
         # 如果配置文件中有默认读取目录，则使用，否则弹出选择目录
-        if not (InitVar.image_dir and os.path.isdir(InitVar.image_dir)):
+        if not (self.default_read_dir and os.path.isdir(self.default_read_dir)):
             InitVar.image_dir = filedialog.askdirectory(title="请选择图片所在的文件夹")
             if not InitVar.image_dir:
                 messagebox.showerror("错误", "未选择任何文件夹")

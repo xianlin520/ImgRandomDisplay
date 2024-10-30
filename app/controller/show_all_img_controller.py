@@ -8,6 +8,7 @@ from tkinter import filedialog, messagebox
 
 from PIL import Image, ImageTk
 
+from app.controller import menu_controller
 from app.init_var import InitVar
 
 
@@ -27,7 +28,7 @@ class ShowAllImgController:
 
         # 设置图片目录到成员变量
         self.image_dir = InitVar.image_dir
-        self.default_read_dir = InitVar.default_read_dir
+
 
     def display_images(self):
         """
@@ -107,7 +108,7 @@ class ShowAllImgController:
                 size_label.pack(pady=1)
 
                 # 绑定左键点击事件打开图片
-                img_label.bind("<Button-1>", lambda e, path=file_path: self.open_image(path))
+                img_label.bind("<Button-1>", lambda e, path=file_path: menu_controller.open_image(path))
 
                 # 绑定右键点击事件显示菜单
                 img_label.bind("<Button-3>", lambda e, path=file_path: self.show_context_menu(e, path))
@@ -122,6 +123,26 @@ class ShowAllImgController:
             self.view.button.config(state=tk.NORMAL)
         # 新建线程, 延迟执行
         threading.Timer(0.1, open_btn).start()
+
+    def show_context_menu(self, event, path):
+        """
+        显示右键菜单，包含“另存为”和“打开文件所在位置”选项
+        """
+        menu = tk.Menu(self.root, tearoff=0)
+        menu.add_command(label="另存为", command=lambda: menu_controller.save_as(path))
+        menu.add_command(label="复制图片", command=lambda: menu_controller.copy_image(path))
+        menu.add_command(label="打开文件所在位置", command=lambda: menu_controller.open_file_location(path))
+        menu.add_command(label="移出图片", command=lambda: menu_controller.remove_image(path))  # 新增“移出图片”选项
+        # 添加空行
+        menu.add_separator()
+        if os.path.relpath(path, self.image_dir) in InitVar.favorites:
+            menu.add_command(label="取消最爱", command=lambda: menu_controller.cancel_favorite(path))
+        else:
+            menu.add_command(label="设为最爱", command=lambda: menu_controller.set_as_favorite(path))
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
 
     def count_img_list(self):
         # 确定本次要展示的图片数
@@ -183,16 +204,6 @@ class ShowAllImgController:
         """
         读取指定目录下的所有图片文件，并计算总大小
         """
-        # 如果配置文件中有默认读取目录，则使用，否则弹出选择目录
-        if self.default_read_dir and os.path.isdir(self.default_read_dir):
-            self.image_dir = self.default_read_dir
-        else:
-            self.image_dir = filedialog.askdirectory(title="请选择图片所在的文件夹")
-            if not self.image_dir:
-                messagebox.showerror("错误", "未选择任何文件夹，程序将退出。")
-                self.root.quit()
-                return
-
         # 清空之前的图片列表
         self.all_image_files.clear()
 

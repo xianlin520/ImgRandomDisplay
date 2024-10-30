@@ -3,6 +3,7 @@ import tkinter as tk
 from app.controller.app_controller import AppController
 from app.init_var import InitVar
 from app.view.options_view import OptionsView
+from app.view.settings_view import SettingsView
 from app.view.show_all_img_view import ShowAllImgView
 from app.view.show_like_view import ShowLikeView
 
@@ -38,7 +39,7 @@ class AppView:
         # 显示提示
         size_label = tk.Label(
             self.top_frame,
-            text=f"Ps:长按展示按钮应用排序",
+            text=f"Ps:长按展示按钮重载图片",
             fg="white",
             bg="#1E1F22",
             font=("微软雅黑", 10),
@@ -47,6 +48,8 @@ class AppView:
         size_label.pack(side=tk.LEFT, padx=10)
 
         # 绑定功能视图
+        # 设置界面, 优先加载设置, 读取配置文件
+        SettingsView(self)
         # 查看最爱图片
         ShowLikeView(self)
         # 选项框

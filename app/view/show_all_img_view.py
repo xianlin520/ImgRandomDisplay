@@ -30,6 +30,8 @@ class ShowAllImgView:
         self.is_long_pressed = False  # 新增状态标志
         # 加载图片
         self.controller.load_images()
+        # 显示一次图片
+        self.controller.display_images()
 
     def on_button_press(self, event):
         """鼠标按下事件"""

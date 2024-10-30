@@ -10,6 +10,8 @@ class InitVar:
 
     # 设置程序窗体大小
     WINDOW_SIZE = (1300, 750)
+    # 设置程序标题
+    WINDOW_TITLE = '千寻图片查看器'
 
     # 设置下拉框动态配置值
     options = "随机展示"  # 默认值/选择值

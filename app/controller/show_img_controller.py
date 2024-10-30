@@ -268,4 +268,4 @@ class ShowImgController:
         # 更新窗口标题
         total_size_gb = round(self.total_size / (1024 ** 3), 2)  # 转换为GB
         file_count = len(self.all_image_files)
-        self.root.title(f"随机图片查看器 - 已读取 {file_count} 张 - {total_size_gb} GB -- By 羡林i")
+        self.root.title(f"{InitVar.WINDOW_TITLE} - 已读取 {file_count} 张 - {total_size_gb} GB -- By 羡林i")

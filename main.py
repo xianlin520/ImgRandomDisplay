@@ -5,6 +5,7 @@ import sys
 import tkinter as tk
 from tkinter import messagebox
 
+from app.init_var import InitVar
 from app.view.app_view import AppView
 
 if __name__ == "__main__":
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("RandomImageViewer")
     root = tk.Tk()
     # 初始窗口标题
-    root.title("随机图片查看器")
+    root.title(InitVar.WINDOW_TITLE)
     # 设置程序ICO
     root.iconbitmap("ChatZenLogo_64x64.ico")  # 设置程序ICO
     # 设置全局字体为微软雅黑

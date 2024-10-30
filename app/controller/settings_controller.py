@@ -118,7 +118,6 @@ class SettingsController:
             self.config.read(self.config_file, encoding='utf-8')
             self.default_read_dir = self.config.get('Settings', 'read_dir', fallback='')
             self.default_save_dir = self.config.get('Settings', 'save_dir', fallback='')
-            InitVar.image_dir = self.default_read_dir
         else:
             self.default_read_dir = ''
             self.default_save_dir = ''
@@ -131,11 +130,17 @@ class SettingsController:
                 # 关闭程序
                 sys.exit(0)
             return
+        else:
+            InitVar.image_dir = self.default_read_dir
+            InitVar.default_read_dir = self.default_read_dir
+            InitVar.default_save_dir = self.default_save_dir
 
     def write_config(self):
         """
         将配置写入配置文件
         """
+        InitVar.default_read_dir = self.default_read_dir
+        InitVar.default_save_dir = self.default_save_dir
         self.config['Settings'] = {
             'read_dir': self.default_read_dir,
             'save_dir': self.default_save_dir,

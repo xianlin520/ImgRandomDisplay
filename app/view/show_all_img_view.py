@@ -1,6 +1,7 @@
+import threading
 import tkinter as tk
 
-from app.controller.show_all_img_controller import ShowAllImgController
+from app.controller.show_img_controller import ShowImgController
 
 
 class ShowAllImgView:
@@ -8,8 +9,11 @@ class ShowAllImgView:
         self.view = view
         self.root = view.root
 
+        # 表示为全部
+        self.is_all = True
         # 处理视图逻辑
-        self.controller = ShowAllImgController(self)
+        self.controller = ShowImgController(self)
+
 
         # 创建“随机显示图片”按钮
         self.button = tk.Button(
@@ -27,7 +31,8 @@ class ShowAllImgView:
         self.button.bind("<ButtonPress-1>", self.on_button_press)
         self.button.bind("<ButtonRelease-1>", self.on_button_release)
         self.press_start_time = None
-        self.is_long_pressed = False  # 新增状态标志
+        self.is_long_pressed = False  # 记录是否长按
+        self.is_btn = False # 防止多次点击, 记录是否在执行中
         # 加载图片
         self.controller.load_images()
         # 显示一次图片
@@ -52,6 +57,15 @@ class ShowAllImgView:
         self.is_long_pressed = True
         self.controller.load_images()
 
+
+
     def click_action(self):
         """点击动作, 点击展现下一组"""
-        self.controller.display_images()
+        # 新建线程执行
+        if self.is_btn:
+            return
+        self.is_btn = True
+        threading.Thread(target=self.controller.display_images).start()
+        # self.controller.display_images()
+
+

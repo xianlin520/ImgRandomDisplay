@@ -12,7 +12,7 @@ from app.controller import menu_controller
 from app.init_var import InitVar
 
 
-class ShowAllImgController:
+class ShowImgController:
     def __init__(self, view):
         self.view = view
         self.root = view.root
@@ -97,7 +97,13 @@ class ShowAllImgController:
                     font=("微软雅黑", 10)
                 )
                 if self.options == InitVar.OPTIONS_LIST[0]:  # 随机排序
-                    size_label.config(text=f'{file[0]}')
+                    # 读取文件名, 并且限制在16位以内, 如果超出, 则省略中间部分为...
+                    file_name = file[0]
+                    if len(file_name) > 16:
+                        file_name = file_name[:8] + "..." + file_name[-8:]
+                    # 显示图片的文件名
+                    size_label.config(text=f'{file_name}')
+
                 elif self.options == InitVar.OPTIONS_LIST[1] or self.options == InitVar.OPTIONS_LIST[2]:  # 新 -> 旧
                     # 显示图片的日期信息
                     getmtime = os.path.getmtime(os.path.join(self.image_dir, file[0]))
@@ -119,6 +125,7 @@ class ShowAllImgController:
         # 完成后启用按钮
         def open_btn():
             self.view.button.config(state=tk.NORMAL)
+            self.view.is_btn = False
 
         # 新建线程, 延迟执行
         threading.Timer(0.1, open_btn).start()
@@ -206,18 +213,22 @@ class ShowAllImgController:
         # 清空之前的图片列表
         self.all_image_files.clear()
 
-        # 读取目录下的所有文件（不包括子文件夹）
-        for file in os.listdir(self.image_dir):
-            file_path = os.path.join(self.image_dir, file)
-            if os.path.isfile(file_path):
-                # 检查文件是否是图片格式
-                if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff')):
-                    self.all_image_files.append(file)
+        # 判断调用对象是否有is_like属性
+        if hasattr(self.view, 'is_like') and self.view.is_like: # 如果喜欢模式, 则直接载入喜欢的图片
+            self.all_image_files = InitVar.favorites.copy()
+        else: # 否则载入所有图片
+            # 读取目录下的所有文件（不包括子文件夹）
+            for file in os.listdir(self.image_dir):
+                file_path = os.path.join(self.image_dir, file)
+                if os.path.isfile(file_path):
+                    # 检查文件是否是图片格式
+                    if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff')):
+                        self.all_image_files.append(file)
 
-        if not self.all_image_files:
-            messagebox.showerror("错误", "所选目录下没有图片文件，程序将退出。")
-            self.root.quit()
-            return
+            if not self.all_image_files:
+                messagebox.showerror("错误", "所选目录下没有图片文件，程序将退出。")
+                self.root.quit()
+                return
 
         # 计算总大小和每张图片的大小
         self.total_size = 0
@@ -250,7 +261,10 @@ class ShowAllImgController:
         self.remaining_images = self.all_image_files.copy()
 
         # 更新按钮文本
-        self.view.button.config(text=f"展示全部 - 共{len(self.all_image_files)}张")
+        if hasattr(self.view, 'is_like') and self.view.is_like:
+            self.view.button.config(text=f"展示最爱 - 共{len(self.all_image_files)}张")
+        else:
+            self.view.button.config(text=f"展示全部 - 共{len(self.all_image_files)}张")
         # 更新窗口标题
         total_size_gb = round(self.total_size / (1024 ** 3), 2)  # 转换为GB
         file_count = len(self.all_image_files)

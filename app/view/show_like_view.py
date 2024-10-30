@@ -1,6 +1,7 @@
+import threading
 import tkinter as tk
 
-from app.controller.show_like_controller import ShowLikeController
+from app.controller.show_img_controller import ShowImgController
 
 
 class ShowLikeView:
@@ -8,8 +9,11 @@ class ShowLikeView:
         self.view = view
         self.root = view.root
 
+        # 添加标签, 表示为"最爱"
+        self.is_like = True
         # 处理视图逻辑
-        self.controller = ShowLikeController(self)
+        self.controller = ShowImgController(self)
+
 
         # 创建“随机最爱”按钮
         self.button = tk.Button(
@@ -27,7 +31,8 @@ class ShowLikeView:
         self.button.bind("<ButtonPress-1>", self.on_button_press)
         self.button.bind("<ButtonRelease-1>", self.on_button_release)
         self.press_start_time = None
-        self.is_long_pressed = False  # 新增状态标志
+        self.is_long_pressed = False  # 记录是否长按
+        self.is_btn = False  # 防止多次点击, 记录是否在执行中
         # 加载图片
         self.controller.load_images()
 
@@ -52,4 +57,8 @@ class ShowLikeView:
 
     def click_action(self):
         """点击动作, 点击展现下一组"""
-        self.controller.display_images()
+        # 新建线程执行
+        if self.is_btn:
+            return
+        self.is_btn = True
+        threading.Thread(target=self.controller.display_images).start()

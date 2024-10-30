@@ -39,6 +39,7 @@ class ShowLikeView:
     def on_button_press(self, event):
         """鼠标按下事件"""
         self.is_long_pressed = False
+        self.view.now_view = self
         self.press_start_time = self.root.after(1000, self.long_press_action)  # 1秒后调用长按动作
 
     def on_button_release(self, event):
@@ -53,7 +54,14 @@ class ShowLikeView:
     def long_press_action(self):
         """长按动作, 长按重新载图"""
         self.is_long_pressed = True
-        self.controller.load_images()
+        if self.is_btn:
+            return
+        self.is_btn = True
+        thr = threading.Thread(target=self.controller.load_images())
+        thr.start()
+        # start完成后执行赋值
+        thr.join()
+        self.is_btn = False
 
     def click_action(self):
         """点击动作, 点击展现下一组"""

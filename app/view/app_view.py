@@ -29,17 +29,20 @@ class AppView:
         self.images_frame.pack(pady=(50, 0))
         self.images_frame1 = tk.Frame(self.root, bg="black")
         self.images_frame1.pack(pady=0)
+        # 创建标志, 绑定当前展示图片的对象
+        self.now_view = None
 
         # 处理主视图控制逻辑
-        controller = AppController(self)
+        self.controller = AppController(self)
 
         # 绑定退出事件
-        self.root.bind("<Escape>", controller.exit_program)
+        self.root.bind("<Escape>", self.controller.exit_program)
 
         # 显示提示
         size_label = tk.Label(
             self.top_frame,
-            text=f"Ps:长按展示按钮重载图片",
+            text="Ps:长按展示按钮重载图片"
+                 "\r空格同点击, Esc退出",
             fg="white",
             bg="#1E1F22",
             font=("微软雅黑", 10),
@@ -55,4 +58,9 @@ class AppView:
         # 选项框
         OptionsView(self)
         # 查看全部图片
-        ShowAllImgView(self)
+        view = ShowAllImgView(self)
+        self.now_view = view
+
+        # 绑定空格按下和松开事件, 默认全部
+        self.root.bind("<space>", self.controller.on_button_press)
+        self.root.bind("<KeyRelease-space>", self.controller.on_button_release)

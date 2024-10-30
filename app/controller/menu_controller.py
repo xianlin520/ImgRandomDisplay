@@ -157,5 +157,6 @@ def write_favorite_config():
     favorite_config['Settings'] = {
         'favorites': json.dumps(InitVar.favorites)
     }
-    with open(InitVar.LIKE_CONFIG_FILE, 'w', encoding='utf-8') as f:
+    favorite_config_file = os.path.join(InitVar.image_dir, InitVar.LIKE_CONFIG_FILE)
+    with open(favorite_config_file, 'w', encoding='utf-8') as f:
         favorite_config.write(f)

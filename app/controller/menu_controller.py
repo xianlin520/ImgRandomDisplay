@@ -35,7 +35,7 @@ def save_as(path):
     try:
         # 如果配置文件中有默认保存目录，则使用，否则弹出选择目录
         if InitVar.default_save_dir and os.path.isdir(InitVar.default_save_dir):
-            save_dir = InitVar.default_save_dir.copy()
+            save_dir = InitVar.default_save_dir
         else:
             save_dir = filedialog.askdirectory(title="选择保存目录")
             if not save_dir:

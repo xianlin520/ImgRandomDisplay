@@ -32,7 +32,7 @@ class ShowLikeView:
         self.button.bind("<ButtonRelease-1>", self.on_button_release)
         self.press_start_time = None
         self.is_long_pressed = False  # 记录是否长按
-        self.is_btn = False  # 防止多次点击, 记录是否在执行中
+        self.is_btn = False # 防止多次点击, 记录是否在执行中
         # 加载图片
         self.controller.load_images()
 
@@ -62,6 +62,8 @@ class ShowLikeView:
         # start完成后执行赋值
         thr.join()
         self.is_btn = False
+        # 显示一次图片
+        self.click_action()
 
     def click_action(self):
         """点击动作, 点击展现下一组"""

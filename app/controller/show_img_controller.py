@@ -212,6 +212,7 @@ class ShowImgController:
         """
         # 清空之前的图片列表
         self.all_image_files.clear()
+        print('开始读取图片列表')
 
         # 判断调用对象是否有is_like属性
         if hasattr(self.view, 'is_like') and self.view.is_like: # 如果喜欢模式, 则直接载入喜欢的图片

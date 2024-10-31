@@ -27,6 +27,7 @@ class ShowAllImgView:
             height=2
         )
         self.button.pack(side=tk.LEFT, padx=10)
+
         # 绑定鼠标按下和松开事件
         self.button.bind("<ButtonPress-1>", self.on_button_press)
         self.button.bind("<ButtonRelease-1>", self.on_button_release)
@@ -59,12 +60,13 @@ class ShowAllImgView:
         if self.is_btn:
             return
         self.is_btn = True
-        thr = threading.Thread(target= self.controller.load_images())
+        thr = threading.Thread(target=self.controller.load_images())
         thr.start()
         # start完成后执行赋值
         thr.join()
         self.is_btn = False
-
+        # 显示一次图片
+        self.click_action()
 
     def click_action(self):
         """点击动作, 点击展现下一组"""
@@ -73,6 +75,3 @@ class ShowAllImgView:
             return
         self.is_btn = True
         threading.Thread(target=self.controller.display_images).start()
-        # self.controller.display_images()
-
-
